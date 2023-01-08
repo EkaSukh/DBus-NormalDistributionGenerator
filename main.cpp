@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "I registered the service SERVICE_NAME\n");
     }
 
+    //generator->testDistribution();
+
     app.exec();
     return 0;
 }

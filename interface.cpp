@@ -15,7 +15,7 @@ GenInterface::GenInterface(){
     defaultMean = 0;
     defaultDeviation = 3;
 }
-
+/*
 void GenInterface::getDistribution(const int m, const int d, const int p){
     fprintf(stderr, "Get distribution with parameters");
     devMap.clear();
@@ -42,6 +42,55 @@ void GenInterface::printDistribution(){
     for(auto i: devMap){
         fprintf(stderr, "%i  %s\n", i.first, std::string(i.second, '*').c_str());
     }
+    return;
+}
+*/
+
+void GenInterface::getDistribution(const int m, const int d, const int p){
+    fprintf(stderr, "Get distribution with parameters\n");
+
+    reply = iface->call("getDistribution", m, d, p);
+    if(!reply.isValid()){
+       fprintf(stderr, "Reply is not valid\n");
+       return;
+    }
+    respMap.clear();
+    const QMap<QString, QVariant> tmp = reply.value().variant().toMap();
+    fprintf(stderr, "reply is converted to tmpMap size of %i\n", tmp.size());
+
+    reply = iface->call("getLastVal");
+    lastVal = reply.value().variant().toInt();
+
+    return;
+}
+
+void GenInterface::getDistribution(){
+    fprintf(stderr, "Get distribution by default\n");
+
+    reply = iface->call("getDistribution");
+    if(!reply.isValid()){
+       fprintf(stderr, "Reply is not valid\n");
+       return;
+    }
+    //respMap.clear();
+    //devMap = replyIntMap.value();
+    const QMap<QString, QVariant> tmp = reply.value().variant().toMap();
+    fprintf(stderr, "reply is converted to tmpMap size of %i\n", tmp.size());
+
+
+    reply = iface->call("getLastVal");
+    lastVal = reply.value().variant().toInt();
+
+    return;
+}
+void GenInterface::printDistribution(){
+    QMap<QString, QVariant>::iterator i = respMap.begin();
+    while(i != respMap.end()){
+        fprintf(stderr, "%s  %s\n", i.key().toStdString().c_str(), std::string(i.value().toInt(), '*').c_str());
+        ++i;
+    }
+
+    fprintf(stderr, "respMap size is  %i\n", respMap.size());
     return;
 }
 

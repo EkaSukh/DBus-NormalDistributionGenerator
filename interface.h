@@ -34,10 +34,13 @@ private:
     void printDistribution();
 
     std::map<int, int> devMap;
+    QMap<QString, QVariant> respMap;
+
     int lastVal;
     int period;
     int defaultMean;
     int defaultDeviation;
+    QDBusReply<std::map<int, int>> replyIntMap;
     QDBusReply<QDBusVariant> reply;
     QRegularExpression reOne;
     QRegularExpression reTwo;
