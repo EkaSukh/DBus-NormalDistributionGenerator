@@ -11,6 +11,16 @@ int main(int argc, char **argv)
     QCoreApplication app(argc, argv);
 
     fprintf(stderr, "Interface process is actually started\n");
+    fprintf(stderr, "number of parameters is %i\n", argc);
+    QString input;
+    if(argc > 1){
+        for(int i = 1; i <=(argc-1); ++i){
+            input.append(argv[i]);
+            input.append(' ');
+        }
+        fprintf(stderr, "Constructed string form input \'%s\'\n", input.toStdString().c_str());
+    }
+
 
     if(!QDBusConnection::sessionBus().isConnected()){
         fprintf(stderr, "Cannot connect to the D-Bus session bus.\n"
@@ -26,30 +36,16 @@ int main(int argc, char **argv)
                                        QDBusServiceWatcher::WatchForRegistration);
 
     GenInterface generatorInterface;
+    generatorInterface.setFromCommandLine(input);
+
 
     QObject::connect(&serviceWatcher, &QDBusServiceWatcher::serviceRegistered,
                      &generatorInterface, &GenInterface::start);
 
+    QCoreApplication::connect(&generatorInterface, SIGNAL(quit()), &app, SLOT(quit()));
+
    QProcess interf;
    interf.start("./Generator_engine");
-/*
-   QQmlApplicationEngine engine;
-   QQmlContext* rootContext = engine.rootContext();
-   rootContext->setContextProperty("classH", &generatorInterface);
-
-   const QUrl qurl("chart.qml");
-   QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-                    &app, [qurl](QObject *obj, const QUrl & objUrl){
-       if(!obj && qurl == objUrl)
-               QCoreApplication::exit(-1);
-   }, Qt::QueuedConnection);
-
-   engine.load(qurl);
-
-
-   QQmlComponent component(&engine, QUrl("qrc:chart.qml"));
-   auto *genInt = qobject_cast<GenInterface *>(component.create());
-    */
 
    app.exec();
 }
