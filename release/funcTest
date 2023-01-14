@@ -1,0 +1,45 @@
+#!/bin/bash
+engine=Generator_engine
+application=Generator_interface
+logg=testLogg
+
+#check that target files exist and are executable
+
+if [ -x $engine ]
+then
+echo "See the $engine"
+else
+echo "Can not see the $engine"
+fi
+
+if [ -x $application ]
+then
+echo "See the $application and can run tests"
+else
+echo "Can not seen the $application"
+fi
+
+#create an output logg
+if [ -w $logg ]
+then
+echo "overrite existing testLogg"
+else
+echo "creating a testLogg"
+touch testLogg
+fi
+
+#rederrect output
+exec 2>$logg
+
+#run first test without parameters
+./$application
+
+#run second test with one parameter
+./$application 5
+
+#run second test with two parameter
+./$application 5 3
+
+#run second test with three parameter
+./$application 5 3 5000
+

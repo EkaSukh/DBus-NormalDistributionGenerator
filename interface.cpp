@@ -14,10 +14,16 @@ GenInterface::GenInterface(){
     reThree.setPattern("(\\d+) (\\d+) (\\d+)");
     defaultMean = 0;
     defaultDeviation = 3;
+
 }
 
+void GenInterface::setFromCommandLine(QString& inp){
+    lineFromCommandLine = inp;
+}
+
+
 void GenInterface::getDistribution(const int m, const int d, const int p){
-    fprintf(stderr, "Get distribution with parameters");
+    fprintf(stderr, "Get distribution with parameters\n");
     devMap.clear();
     for(int i = 0; i < p; ++i){
         reply = iface->call("getPoint", m, d);
@@ -28,7 +34,7 @@ void GenInterface::getDistribution(const int m, const int d, const int p){
 }
 
 void GenInterface::getDistribution(){
-    fprintf(stderr, "Get distribution without parameters");
+    fprintf(stderr, "Get distribution without parameters\n");
     devMap.clear();
     for(int i = 0; i < period; ++i){
         reply = iface->call("getPoint");
@@ -54,7 +60,7 @@ void GenInterface::start(const QString &name)
     }
 
 
-    qstdin.open(stdin, QIODevice::ReadOnly);
+    //qstdin.open(stdin, QIODevice::ReadOnly);
     iface = new QDBusInterface(SERVICE_NAME, "/norm/generator", "norm.integer.generator",
                                QDBusConnection::sessionBus(), this);
 
@@ -69,11 +75,12 @@ void GenInterface::start(const QString &name)
     fprintf(stderr, "Check engine: %s\n", qPrintable(startReply.value().variant().toString()));
 
 
-    while(true){
+    //while(true){
         fprintf(stderr, "Start generator interface. Enter your input.\n It should be nothing, or three integers (<mean> <dispersion> <number of points>).\n To quit print \"quit\"\n");
 
 
-        QString line = QString::fromLocal8Bit(qstdin.readLine()).trimmed();
+        //QString line = QString::fromLocal8Bit(qstdin.readLine()).trimmed();
+        QString line = lineFromCommandLine;
         if(line.isEmpty()){
 
             fprintf(stderr, "%s\n", "The string is empty. Calling default parameters");
@@ -81,7 +88,9 @@ void GenInterface::start(const QString &name)
             getDistribution();
             printDistribution();
             fprintf(stderr, "The last value is %i\n", lastVal);
-            continue;
+            //continue;
+            emit quit();
+            return;
 
         }else if(line == "quit"){
             fprintf(stderr, "Calling quit\n");
@@ -101,7 +110,9 @@ void GenInterface::start(const QString &name)
                 getDistribution(m,d,period);
                 printDistribution();
                 fprintf(stderr, "The last value is %i\n", lastVal);
-                continue;
+                //continue;
+                emit quit();
+                return;
 
             }else{
                 match = reTwo.match(line);
@@ -113,7 +124,9 @@ void GenInterface::start(const QString &name)
                     getDistribution(m,d,period);
                     printDistribution();
                     fprintf(stderr, "The last value is %i\n", lastVal);
-                    continue;
+                    //continue;
+                    emit quit();
+                    return;
 
                 }else {
                     match = reOne.match(line);
@@ -124,16 +137,20 @@ void GenInterface::start(const QString &name)
                         getDistribution(m, defaultDeviation, period);
                         printDistribution();
                         fprintf(stderr, "The last value is %i\n", lastVal);
-                        continue;
+                        //continue;
+                        emit quit();
+                        return;
 
                     }else{
                         fprintf(stderr, "Could not find any numbers\n");
-                                        continue;
+                                        //continue;
+                        emit quit();
+                        return;
                     }
                 }
             }
         }
-    }
+    //}
 }
 
 /*

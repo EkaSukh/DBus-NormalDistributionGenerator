@@ -23,9 +23,9 @@ class GenInterface: public QObject
 
   public:
     GenInterface();
-    QFile qstdin;
+    //QFile qstdin;
     QDBusInterface *iface;
-
+    void setFromCommandLine(QString& inp);
 
 
 private:
@@ -44,5 +44,6 @@ private:
     QRegularExpression reThree;
     QRegularExpressionMatch match;
 
+    QString lineFromCommandLine;
 
 };
