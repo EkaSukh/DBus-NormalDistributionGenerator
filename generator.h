@@ -9,6 +9,7 @@
 
 #include <random>
 
+//this class generates values that are pass to interface allication
 class NormGenerator: public QDBusAbstractAdaptor
 {
     Q_OBJECT
@@ -19,18 +20,20 @@ class NormGenerator: public QDBusAbstractAdaptor
     ~NormGenerator()=default;
 
 public slots:
-   // void setMean(const int m);
-   // void setDeviation(const int d);
-
+    //this two fuctions generate values
     QDBusVariant getPoint(const int m, const int d);
     QDBusVariant getPoint();
+    //this function is to check communication between engine and interface
     QDBusVariant checkEngine();
+    //this function is to quit from the application through D-Bus communication
     Q_NOREPLY void quit();
 
 signals:
+    //bounds quit() signal of a parent object
     void toQuit();
 
 private:
+    //default parameters for distribution
     const int mean = 10;
     const int deviation = 15;
 
