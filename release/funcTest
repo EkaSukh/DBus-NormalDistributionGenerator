@@ -37,9 +37,12 @@ exec 2>$logg
 #run second test with one parameter
 ./$application 5
 
-#run second test with two parameter
+#run third test with two parameter
 ./$application 5 3
 
-#run second test with three parameter
-./$application 5 3 5000
+#run fourth test with two parameter
+./$application 5 3 500
+
+#run fifth test with three parameter
+./$application Dummy empty
 

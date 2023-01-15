@@ -6,24 +6,25 @@
 #include <stdio.h>
 #include "interface.h"
 
+//constructor sets most of private parameters
 GenInterface::GenInterface(){
     lastVal = 0;
     period = 1000;
     reOne.setPattern("(\\d+)");
     reTwo.setPattern("(\\d+) (\\d+)");
     reThree.setPattern("(\\d+) (\\d+) (\\d+)");
-    defaultMean = 0;
-    defaultDeviation = 3;
-
+    defaultDeviation = 15;
 }
 
+//set private QString to pass to start() function
 void GenInterface::setFromCommandLine(QString& inp){
     lineFromCommandLine = inp;
 }
 
-
+//communicate through D-Bus with generator and collects data from the reply
 void GenInterface::getDistribution(const int m, const int d, const int p){
-    fprintf(stderr, "Get distribution with parameters\n");
+
+    //fprintf(stderr, "Get distribution with parameters\n");
     devMap.clear();
     for(int i = 0; i < p; ++i){
         reply = iface->call("getPoint", m, d);
@@ -33,8 +34,10 @@ void GenInterface::getDistribution(const int m, const int d, const int p){
     return;
 }
 
+//communicate through D-Bus with generator and collects data from the reply
 void GenInterface::getDistribution(){
-    fprintf(stderr, "Get distribution without parameters\n");
+
+    //fprintf(stderr, "Get distribution without parameters\n");
     devMap.clear();
     for(int i = 0; i < period; ++i){
         reply = iface->call("getPoint");
@@ -44,6 +47,7 @@ void GenInterface::getDistribution(){
     return;
 }
 
+//prints pseudo graphics about the distribution data
 void GenInterface::printDistribution(){
     for(auto i: devMap){
         fprintf(stderr, "%i  %s\n", i.first, std::string(i.second, '*').c_str());
@@ -51,57 +55,58 @@ void GenInterface::printDistribution(){
     return;
 }
 
-
+//chech that D-Bus communication between generator and interface aplications works
 void GenInterface::start(const QString &name)
 {
-    fprintf(stderr, "GenInterface is called()\n");
+    //check correctness of SERVICE_NAME    
     if(name != SERVICE_NAME){
+
+        fprintf(stderr, "Service interface is wrong \n");
+        //stop both applications
+        iface->call("quit");
+        emit quit();
         return;
     }
 
-
-    //qstdin.open(stdin, QIODevice::ReadOnly);
+    //initialize the interface variable to D-Bus interaction and check its validity
     iface = new QDBusInterface(SERVICE_NAME, "/norm/generator", "norm.integer.generator",
                                QDBusConnection::sessionBus(), this);
-
     if(!iface->isValid()){
         fprintf(stderr, "%s\n", qPrintable(QDBusConnection::sessionBus().lastError().message()));
         QCoreApplication::instance()->quit();
     }
 
+    //connects signal in generator application with quit() from generator application
     connect(iface, SIGNAL(toQuit()), QCoreApplication::instance(), SLOT(quit()));
 
+    //check that D-Bus communication between applications works
     QDBusReply<QDBusVariant> startReply = iface->call("checkEngine");
     fprintf(stderr, "Check engine: %s\n", qPrintable(startReply.value().variant().toString()));
 
 
-    //while(true){
-        fprintf(stderr, "Start generator interface. Enter your input.\n It should be nothing, or three integers (<mean> <dispersion> <number of points>).\n To quit print \"quit\"\n");
+    //now the main part of the function do the D-Bus communication
 
+        fprintf(stderr, "Enter your input. It should be nothing, or three integers (<mean> <dispersion> <number of points>).\n");
 
-        //QString line = QString::fromLocal8Bit(qstdin.readLine()).trimmed();
         QString line = lineFromCommandLine;
         if(line.isEmpty()){
 
-            fprintf(stderr, "%s\n", "The string is empty. Calling default parameters");
+            fprintf(stderr, "Input is empty. Use default parameters.\n Mean value is 10, deviation value is 15, number of elements in distribution 1000\n");
 
             getDistribution();
             printDistribution();
             fprintf(stderr, "The last value is %i\n", lastVal);
-            //continue;
-            emit quit();
-            return;
 
-        }else if(line == "quit"){
-            fprintf(stderr, "Calling quit\n");
+            //quit from both applications
             iface->call("quit");
             emit quit();
             return;
 
         }else{
-            //QRegularExpression re("(\\d+) (\\d+) (\\d+)");
+
             match = reThree.match(line);
             if(match.hasMatch()){
+                fprintf(stderr, "Input is: %s\n", lineFromCommandLine.toStdString().c_str());
                 const int m = match.captured(1).toInt();
                 const int d = match.captured(2).toInt();
                 period = match.captured(3).toInt();
@@ -110,13 +115,17 @@ void GenInterface::start(const QString &name)
                 getDistribution(m,d,period);
                 printDistribution();
                 fprintf(stderr, "The last value is %i\n", lastVal);
-                //continue;
+
+                //quit from both applications
+                iface->call("quit");
                 emit quit();
                 return;
 
             }else{
+
                 match = reTwo.match(line);
                 if(match.hasMatch()){
+                    fprintf(stderr, "Input is: %s\n", lineFromCommandLine.toStdString().c_str());
                     const int m = match.captured(1).toInt();
                     const int d = match.captured(2).toInt();
                     fprintf(stderr, "Mean value is %i, deviation value is %i number of elements in distribution %i\n", m, d, period);
@@ -124,35 +133,41 @@ void GenInterface::start(const QString &name)
                     getDistribution(m,d,period);
                     printDistribution();
                     fprintf(stderr, "The last value is %i\n", lastVal);
-                    //continue;
+
+                    //quit from both applications
+                    iface->call("quit");
                     emit quit();
                     return;
 
                 }else {
+
                     match = reOne.match(line);
                     if(match.hasMatch()){
+                        fprintf(stderr, "Input is: %s\n", lineFromCommandLine.toStdString().c_str());
                         const int m = match.captured(1).toInt();
                         fprintf(stderr, "Mean value is %i, deviation value is %i number of elements in distribution %i\n", m, defaultDeviation, period);
 
                         getDistribution(m, defaultDeviation, period);
                         printDistribution();
                         fprintf(stderr, "The last value is %i\n", lastVal);
-                        //continue;
+
+                        //quit from both applications
+                        iface->call("quit");
                         emit quit();
                         return;
 
                     }else{
+                        fprintf(stderr, "Input is: %s\n", lineFromCommandLine.toStdString().c_str());
                         fprintf(stderr, "Could not find any numbers\n");
-                                        //continue;
+
+                        //quit from both applications
+                        iface->call("quit");
                         emit quit();
                         return;
                     }
                 }
             }
         }
-    //}
+
 }
 
-/*
- *
-*/

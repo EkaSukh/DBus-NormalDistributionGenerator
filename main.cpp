@@ -14,9 +14,11 @@ int main(int argc, char *argv[])
     NormGenerator *generator = new NormGenerator(&obj);
     QObject::connect(&app, &QCoreApplication::aboutToQuit, generator, &NormGenerator::toQuit);
 
+    //register object of session bus
     if(QDBusConnection::sessionBus().registerObject("/norm/generator",&obj)){
         fprintf(stderr, "I registered the object /norm/generator \n");
     }
+    //register servise on session bus
     if(!QDBusConnection::sessionBus().registerService(SERVICE_NAME)){
         fprintf(stderr, "%s\n",
                 qPrintable(QDBusConnection::sessionBus().lastError().message()));
